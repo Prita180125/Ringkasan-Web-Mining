@@ -926,10 +926,55 @@ print(teks_baru)
 <h3 id="reduksi-dimensi">Reduksi Dimensi</h3>
 <h4 id="teori">Teori</h4>
 <blockquote>
-<p>Dalam pengolahan dokumen yang berbasis teks, tentu saja terdapat banyak kosakata. Ketika beragam kosakata tersebut berjumlah sangat banyak, maka diperlukan reduksi dimensi berupa seleksi fitur. Fitur perlu diseleksi untuk menghindari kemunculan berulang suatu fitur dan hanya memilih fitur-fitur yang penting saja. Reduksi dimensi dengan melakukan seleksi fitur dapat diterapkan dengan menggunakan matriks TF-IDF (Term Frequency-Inverse Document Frequency). Dalam matriks TF-IDF, kolom dan barisnya didasarkan pada kosakata dan jumlah kalimat dalam dokumen. Isinya sendiri merupakan frekuensi kemunculan kata dalam setiap potong kalimat.</p>
+<p>Dalam pengolahan dokumen yang berbasis teks, tentu saja terdapat banyak kosakata. Ketika beragam kosakata tersebut berjumlah sangat banyak, maka diperlukan reduksi dimensi berupa seleksi fitur. Fitur perlu diseleksi untuk menghindari kemunculan berulang suatu fitur dan hanya memilih fitur-fitur yang penting saja. Reduksi dimensi dengan melakukan seleksi fitur dapat diterapkan dengan menggunakan matriks TF-IDF (Term Frequency-Inverse Document Frequency). Dalam matriks TF-IDF, kolom dan barisnya didasarkan pada kosakata dan jumlah kalimat dalam dokumen. Isinya sendiri merupakan frekuensi kemunculan kata dalam setiap potong kalimat. Setelah terbentuk matriks, baru dilakukan reduksi dimensi.</p>
 </blockquote>
 <h4 id="implementasi">Implementasi</h4>
-<p>Untuk membentuk matriks TF-IDF, dapat menggunakan library sklearn dari Python dan mengimport modul TfidfTransformer. </p>
+<p>Untuk membentuk matriks TF-IDF, dapat menggunakan library sklearn dari Python dan mengimport modul TfidfTransformer. Lalu untuk reduksi dimensi menggunakan PCA. Dokumen harus melalui case folding, stemming, tokenizing, dan stopword removal untuk sampai ke tahap ini. Berikut adalah tampilan dari matriks TFIDF</p>
+<p><img alt="image-20210610121010525" src="C:\Users\TGB\AppData\Roaming\Typora\typora-user-images\image-20210610121010525.png" /></p>
+<p>Untuk mereduksi dimensi, gunakan code berikut:</p>
+<pre><code class="language-python">from sklearn.decomposition import PCA
+pca = PCA (n_components=2)
+fit_pca = pca.fit_transform(dfb)
+pca_df = pd.DataFrame(data=fit_pca, columns=['PCA 1', 'PCA 2'])
+pca_df.tail()
+</code></pre>
+<p>Output yang dihasilkan:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>PCA 1</th>
+<th>PCA 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4</td>
+<td>-0.019008</td>
+<td>-0.278487</td>
+</tr>
+<tr>
+<td>5</td>
+<td>-0.291685</td>
+<td>-0.128199</td>
+</tr>
+<tr>
+<td>6</td>
+<td>-0.052512</td>
+<td>0.532792</td>
+</tr>
+<tr>
+<td>7</td>
+<td>0.251088</td>
+<td>0.735093</td>
+</tr>
+<tr>
+<td>8</td>
+<td>0.726751</td>
+<td>-0.208282</td>
+</tr>
+</tbody>
+</table>
 <h3 id="implementasi-text-preprocessing">Implementasi Text Preprocessing</h3>
 <pre><code class="language-python">import numpy as np
 import PyPDF2
