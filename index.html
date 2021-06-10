@@ -1084,79 +1084,49 @@ dfb
 <p>Text classification merupakan salah satu hal dalam pengolahan bahasa alami. Biasanya, text classification digunakan dalam analisis sentimen (bisa diterapkan untuk analisis sentimen media sosial), pelabelan topik, dan lain-lain. </p>
 </blockquote>
 <h3 id="implementasi_1">Implementasi</h3>
-<p>Implementasi text classification melibatkan text preprocessing, maka saya akan memberikan contoh code untuk meringkas dokumen menggunakan metode LSA (Latent Semantic Analysis). Dokumen yang saya gunakan adalah berita dari media online yang linknya tertera pada code berikut:</p>
-<pre><code class="language-python">import codecs
-import string 
-import operator
-import numpy as np
-from nltk.tokenize import sent_tokenize
-from nltk.corpus import stopwords
+<p>Implementasi text classification melibatkan text preprocessing, maka saya akan memberikan contoh code untuk meringkas dokumen menggunakan metode LSA (Latent Semantic Analysis) pada teks yang telah melalui preprocessing.</p>
+<pre><code class="language-python">doc_complete = ['roni pergi rumah nenek desa', 'sana banyak pohon hijau sejuk teduh']
+doc_complete
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.utils.extmath import randomized_svd
-from requests_html import HTMLSession
-from Sastrawi.Stemmer.StemmerFactory import StemmerFactory# create stemmer
-from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory #untuk stopword remove
-from nltk.tokenize.punkt import PunktSentenceTokenizer
-
-session = HTMLSession()
-r = session.get('https://suarabojonegoro.com/news/2021/02/27/10-orang-terjaring-razia-protokol-kesehatan-covid-19-di-bojonegoro')
-articles = r.html.find('div.entry-content')
-
-for item in articles:
-    newsitem = item.find('div.entry-content-single', first=True)
-    news = newsitem.text
-    print(news)
-sent_tokenize_list = sent_tokenize(news)
-stopwords= set(StopWordRemoverFactory().get_stop_words())
-#Menghitung TF-IDF
-vectorizer = TfidfVectorizer(stop_words=stopwords, use_idf=True, ngram_range = (1, 3))
-X = vectorizer.fit_transform(sent_tokenize_list) 
-X_T = np.transpose(X)
-U, Sigma, VT = randomized_svd(X_T, n_components=100, n_iter=100, random_state=None)
-k = 4
-temp_k = k
-i = 0 
-index = 0 
-output = []
-index_list = []
-
-if temp_k &lt;= 4:
-    dic = {}
-    for j in range(0, len(VT[0])):
-        dic[j] = VT[0][j]
-    dic_sort = sorted(dic.items(), key=operator.itemgetter(1))
-
-    index1 = dic_sort[-1][0]
-    index2 = dic_sort[-2][0]
-    index3 = dic_sort[-3][0]
-    index4 = dic_sort[-4][0]
-    list = [index1, index2,index3,index4]
-    list = sorted(list)
-    if k == 1:
-        output.append(sent_tokenize_list[list[0]])
-    if k == 2:
-        output.append(sent_tokenize_list[list[0]])
-        output.append(sent_tokenize_list[list[1]])
-    if k ==3:
-        output.append(sent_tokenize_list[list[0]])
-        output.append(sent_tokenize_list[list[1]])
-        output.append(sent_tokenize_list[list[2]])
-    if k ==4:
-        output.append(sent_tokenize_list[list[0]])
-        output.append(sent_tokenize_list[list[1]])
-        output.append(sent_tokenize_list[list[2]])
-        output.append(sent_tokenize_list[list[3]])
-
-summarized_text = &quot; &quot;.join(output)
-print(&quot;Hasil rangkuman: \n&quot;,summarized_text)
+vectorizer = TfidfVectorizer()
+X =vectorizer.fit_transform(doc_complete)
+print(X)
+from sklearn.decomposition import TruncatedSVD
+lsa = TruncatedSVD(n_components=2,n_iter=100)
+lsa.fit(X)
+terms = vectorizer.get_feature_names()
+for i,comp in enumerate(lsa.components_):
+    termsInComp = zip(terms,comp)
+    sortedterms = sorted(termsInComp, key=lambda x: x[1],reverse=True)[:10]
+    print(&quot;Concept %d:&quot; % i)
+    for term in sortedterms:
+        print(term[0])
+    print(&quot; &quot;)
 </code></pre>
-<p>Output program adalah hasil ringkasan dari berita sebagai berikut:</p>
-<pre><code>Hasil rangkuman: 
- Reporter: Yudianto
-SuaraBojonegoro.com – Sebanyak 10 orang warga terjaring operasi Yustisi Protokol Kesehatan Covid 19 yang dilakukan oleh Petugas Gabungan, Dari Polres Bojonegoro, Kodim Bojonegoro, dan Satpol PP Pemkab Bojonegoro, Sabtu (27/2/2021). (adsbygoogle = window.adsbygoogle || []).push({});
-“Mereka pelanggar Covid 19 ini disangsi karena diketahui tidak mengunakan masker,” Kata Benny. Dalam Kegiatan yang dilaksanakan
-Monitor Bangsit Pendisiplinan Prokes Covid 19 juga Melakukan Himbauan kepada Masyarakat agar mematuhi  Protokol Kesehatan Covid-19. (Yud/Red)
-(adsbygoogle = window.adsbygoogle || []).push({});
+<p>Output program:</p>
+<pre><code>Concept 0:
+desa
+nenek
+pergi
+roni
+rumah
+hijau
+pohon
+sana
+sejuk
+teduh
+
+Concept 1:
+hijau
+pohon
+sana
+sejuk
+teduh
+banyak
+desa
+nenek
+pergi
+ron
 </code></pre>
 <h2 id="evaluasi">Evaluasi</h2>
 <h3 id="teori_2">Teori</h3>
@@ -1173,29 +1143,42 @@ Monitor Bangsit Pendisiplinan Prokes Covid 19 juga Melakukan Himbauan kepada Mas
 </ul>
 <p>Untuk mengukur keakuratan ringkasan harus menghitung Precision, Recall, dan F-Measure. </p>
 <ul>
-<li>Rumus menghitung recall adalah banyaknya kata yang overlap dibagi dengan banyaknya kata pada ringkasan rujukan.</li>
-<li>Rumus menghitung Precision adalah banyaknya kata yang overlap dibagi dengan banyaknya kata pada ringkasan mesin</li>
-<li>Rumus menghitung F-Measure adalah </li>
+<li>
+<p>Rumus menghitung recall adalah banyaknya kata yang overlap dibagi dengan banyaknya kata pada ringkasan rujukan.</p>
+</li>
+<li>
+<p>Rumus menghitung Precision adalah banyaknya kata yang overlap dibagi dengan banyaknya kata pada ringkasan mesin</p>
+</li>
+<li>
+<p>Rumus menghitung F-Measure adalah </p>
+</li>
 </ul>
-<p><img alt="Rumus" src="C:\Users\TGB\coba_webmining\site\assets\images\foto.JPG" /></p>
+<p><img alt="" src="../../coba_webmining/site/assets/images/foto.JPG" /></p>
 <h3 id="implementasi_2">Implementasi</h3>
-<pre><code class="language-python">from rouge.rouge import rouge_n_sentence_level
+<pre><code class="language-python">from rouge_score import rouge_scorer
 
-summary_sentence = 'the capital of China is Beijing'.split()
-reference_sentence = 'Beijing is the Capital of China'.split()
+hypotesis = ['Godric Gryffindor is the bravest wizard', 'Salazar Slytherin is the smartest wizard']
+reference = ['Gryffindor house is for the bravest one', 'Slytherin house is for the smartest one']
 
-#Menghitung nilai rouge
-recall, precision, rouge = rouge_n_sentence_level(summary_senteence, reference_sentence, 2)
-print ('ROUGE-2-R', recall)
-print ('ROUGE-2-P', precision)
-print ('ROUGE-2-F', rouge)
+scorer = rouge_scorer.RougeScorer(['rouge1'])
 
+results = {'precision': [], 'recall': [], 'fmeasure': []}
+
+
+for (h, r) in zip(hypotesis, reference):
+    score = scorer.score(h, r)
+    precision, recall, fmeasure = score['rouge1']
+    results['precision'].append(precision)
+    results['recall'].append(recall)
+    results['fmeasure'].append(fmeasure)
+print('precision', results['precision'])
+print('recall', results['recall'])
+print('fmeasure', results['fmeasure'])
 </code></pre>
 <p>Output yang akan dihasilkan adalah berikut:</p>
-<pre><code>ROUGE-2-R 0.6
-ROUGE-2-P 0.6
-ROUGE-2-F 0.6
-ROUGE-2-R 0.6
+<pre><code>precision [0.5714285714285714, 0.5714285714285714]
+recall [0.6666666666666666, 0.6666666666666666]
+fmeasure [0.6153846153846153, 0.6153846153846153]
 </code></pre>
                 
               
